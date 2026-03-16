@@ -91,9 +91,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const ejecucionRows = document.getElementById("ejecucionRows");
   const btnPers5Next = document.getElementById("btnPers5Next");
 
+  // =========================
+  // Post implementación
+  // =========================
   const post2 = document.getElementById("post2");
   const post2Done = document.getElementById("post2_done");
   const post2Radios = Array.from(document.querySelectorAll('input[name="post2_resp"]'));
+  const post2Extra = document.getElementById("post2_extra");
+  const post2Comment = document.getElementById("post2_comment");
+  const btnPost2Finish = document.getElementById("btnPost2Finish");
 
   const post3 = document.getElementById("post3");
   const post3Done = document.getElementById("post3_done");
@@ -400,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
       t.value = "";
     });
 
-    block.querySelectorAll("#post3_si, #post3_no, #cert9_si_wrap").forEach((el) => {
+    block.querySelectorAll("#post3_si, #post3_no, #cert9_si_wrap, #post2_extra").forEach((el) => {
       el.classList.add("hidden");
     });
 
@@ -433,6 +439,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (block.id === "pers5" && pers5Done) {
       pers5Done.checked = false;
+    }
+
+    if (block.id === "post2") {
+      if (post2Comment) post2Comment.value = "";
+      hide(post2Extra);
+      if (post2Done) post2Done.checked = false;
+    }
+
+    if (block.id === "post3") {
+      if (post3Detalle) post3Detalle.value = "";
+      if (post3Just) post3Just.value = "";
+      hide(post3SiWrap);
+      hide(post3NoWrap);
+      if (post3Done) post3Done.checked = false;
     }
   }
 
@@ -673,6 +693,9 @@ document.addEventListener("DOMContentLoaded", () => {
     clearRepeatableRows(certificacionRows);
     clearRepeatableRows(ejecucionRows);
 
+    if (post2Comment) post2Comment.value = "";
+    hide(post2Extra);
+
     setNumeroCambioVisibility();
     if (btnIniciar) btnIniciar.disabled = true;
     refreshSubmitState();
@@ -758,6 +781,9 @@ document.addEventListener("DOMContentLoaded", () => {
     clearRepeatableRows(certificacionRows);
     clearRepeatableRows(ejecucionRows);
 
+    if (post2Comment) post2Comment.value = "";
+    hide(post2Extra);
+
     setNumeroCambioVisibility();
 
     if (selectedMode === "CERTIFICACION") {
@@ -823,6 +849,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (pers5Done) pers5Done.checked = false;
       clearRepeatableRows(certificacionRows);
       clearRepeatableRows(ejecucionRows);
+
+      if (post2Comment) post2Comment.value = "";
+      hide(post2Extra);
 
       refreshSubmitState();
       return;
@@ -1294,10 +1323,15 @@ document.addEventListener("DOMContentLoaded", () => {
     post2Radios.forEach((r) => {
       r.checked = false;
     });
+
+    if (post2Comment) post2Comment.value = "";
+    hide(post2Extra);
+
     if (post3Detalle) post3Detalle.value = "";
     if (post3Just) post3Just.value = "";
     hide(post3SiWrap);
     hide(post3NoWrap);
+
     if (post2Done) post2Done.checked = false;
     if (post3Done) post3Done.checked = false;
   }
@@ -1314,6 +1348,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (val === "NO") show(post3NoWrap);
   }
 
+  // =========================
+  // POST2: SI sigue, NO pide comentario y finaliza
+  // =========================
   post2Radios.forEach((r) => {
     r.addEventListener("change", () => {
       if (selectedMode !== "IMPLEMENTACION") return;
@@ -1322,13 +1359,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const val = r.value;
 
       if (post2Done) {
-        post2Done.checked = true;
-      }
-
-      if (val === "NO") {
-        if (secPostDetails) secPostDetails.open = false;
-        terminateFlowBecauseNo(post2);
-        return;
+        post2Done.checked = false;
       }
 
       const idxPost2 = postBlocks.indexOf(post2);
@@ -1336,7 +1367,18 @@ document.addEventListener("DOMContentLoaded", () => {
         clearFrom(postBlocks, idxPost2 + 1);
       }
 
+      if (val === "NO") {
+        show(post2Extra);
+        if (post3Done) post3Done.checked = false;
+        refreshSubmitState();
+        return;
+      }
+
+      hide(post2Extra);
+      if (post2Comment) post2Comment.value = "";
+
       if (post2Done) {
+        post2Done.checked = true;
         post2Done.dispatchEvent(new Event("change", { bubbles: true }));
       }
 
@@ -1345,6 +1387,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
       refreshSubmitState();
     });
+  });
+
+  btnPost2Finish?.addEventListener("click", () => {
+    if (selectedMode !== "IMPLEMENTACION") return;
+    if (!q0.checked) return;
+
+    const selected = document.querySelector('input[name="post2_resp"]:checked')?.value || "";
+    if (selected !== "NO") return;
+
+    const txt = (post2Comment?.value || "").trim();
+    if (!txt) {
+      alert("Debe escribir el motivo antes de finalizar.");
+      post2Comment?.focus();
+      return;
+    }
+
+    if (post2Done) {
+      post2Done.checked = true;
+    }
+
+    if (secPostDetails) secPostDetails.open = false;
+    terminateFlowBecauseNo(post2);
+    refreshSubmitState();
   });
 
   function continuePost3(isSi) {
@@ -1444,6 +1509,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       post: postBlocks.map((b) => getYesNoFromBlock(b)),
       post2_resp: post2Resp,
+      post2_comment: (post2Comment?.value || "").trim(),
       post3_detalle: (post3Detalle?.value || "").trim(),
       post3_justificacion: (post3Just?.value || "").trim(),
 
@@ -1611,6 +1677,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter((r) => r[0] && r[1]);
 
     const resp = document.querySelector('input[name="post2_resp"]:checked')?.value || "";
+    const post2Motivo = safeText(post2Comment?.value);
     const det = safeText(post3Detalle?.value);
     const jus = safeText(post3Just?.value);
 
@@ -1621,6 +1688,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (b1 && getYesNoFromBlock(b1)) postRows.push(rowForYesNoBlock(b1));
     if (resp) postRows.push(["2. ¿Se realizaron pruebas funcionales como parte del plan de pruebas post implementación?", resp]);
+    if (resp === "NO" && post2Motivo) postRows.push([`Motivo de finalización: ${post2Motivo}`, ""]);
     if (resp === "SI" && det) postRows.push([`3. Detalle pruebas: ${det}`, ""]);
     if (resp === "NO" && jus) postRows.push([`3. Justificación: ${jus}`, ""]);
     if (b4 && getYesNoFromBlock(b4)) postRows.push(rowForYesNoBlock(b4));

@@ -728,3 +728,7 @@ font-weight:800;
 padding:12px 20px;
 border-radius:14px;
 }
+
+.hidden {
+    display: none !important;
+}

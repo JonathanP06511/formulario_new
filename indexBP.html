@@ -88,8 +88,8 @@
       <div id="formWrap" class="hidden">
 
         <!-- =========================
-             1. INFORMACIÓN GENERAL
-        ========================== -->
+     1. INFORMACIÓN GENERAL
+========================== -->
         <details class="tcs-accordion accordion" id="sec0Details" open>
           <summary class="tcs-accordion__summary">
             <span>1. INFORMACIÓN GENERAL</span>
@@ -125,9 +125,45 @@
               </div>
             </div>
 
+            <div id="q1" class="q-block hidden" data-q="1">
+              <div class="q-text">
+                1. ¿La descripción del control hace referencia al (los) CI(s) relacionados especificados en el campo <strong>"CI afectados"</strong>?
+              </div>
+
+              <div class="yn-group">
+                <label class="yn-option">
+                  <input type="radio" name="q1_answer" value="SI">
+                  <span>SI</span>
+                </label>
+
+                <label class="yn-option">
+                  <input type="radio" name="q1_answer" value="NO">
+                  <span>NO</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="q2" class="q-block hidden" data-q="2">
+              <div class="q-text">
+                2. ¿La fecha de planificación de inicio/fin del control de cambios es actual o futura?
+
+              </div>
+
+              <div class="yn-group">
+                <label class="yn-option">
+                  <input type="radio" name="q2_answer" value="SI">
+                  <span>SI</span>
+                </label>
+
+                <label class="yn-option">
+                  <input type="radio" name="q2_answer" value="NO">
+                  <span>NO</span>
+                </label>
+              </div>
+            </div>
+
           </div>
         </details>
-
         <!-- =========================
              FLUJO CERTIFICACIÓN
         ========================== -->
@@ -203,10 +239,12 @@
                   </div>
                 </div>
 
+
                 <div id="q11" class="q-block hidden" data-q="11">
                   <div class="q-text">
                     4. ¿Dentro de las actividades a implementarse, se empleará un proceso automático?
                   </div>
+
                   <div class="yn-group">
                     <label class="yn-option">
                       <input type="radio" name="q11_answer" value="SI">
@@ -217,7 +255,24 @@
                       <span>NO</span>
                     </label>
                   </div>
+
+                  <!-- Extra cuando responde SI -->
+                  <div id="q11Extra" class="hidden" style="margin-top: 14px;">
+                    <label for="q11Detalle" style="display:block; margin-bottom:8px; font-weight:600;">
+                      Detalle del proceso automático:
+                    </label>
+                    <textarea id="q11Detalle" name="q11_detalle" rows="4"
+                      placeholder="Describa el proceso automático que se empleará"
+                      style="width:100%; resize:vertical;"></textarea>
+
+                    <div style="margin-top: 12px;">
+                      <button type="button" id="btnQ11Continuar" class="tcs-btn tcs-btn--send">
+                        <span>CONTINUAR</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
+
               </div>
             </details>
           </div>

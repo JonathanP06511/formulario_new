@@ -2,8 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("cambiosForm");
   if (!form) return;
 
-  const FLOW_URL =
-    "";
+  const FLOW_URL = "";
 
   // =========================
   // ELEMENTOS BASE
@@ -45,22 +44,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnSubmit = form.querySelector('button[type="submit"]');
   const btnPdf = document.getElementById("btnPdf");
 
+  // Extras q11
+  const q11Extra = document.getElementById("q11Extra");
+  const q11Detalle = document.getElementById("q11Detalle");
+  const btnQ11Continuar = document.getElementById("btnQ11Continuar");
+
   const titleText = (
     document.querySelector(".tcs-titlebar h1")?.textContent ||
     "CHECKLIST GESTIÓN DE CAMBIOS"
   ).trim();
 
   // =========================
-  // IDS REALES DEL HTML NUEVO
+  // IDS
   // =========================
+  const GENERAL_IDS = ["q1", "q2"];
   const CERT_IDS = ["q8", "q9", "q10", "q11"];
   const IMPL_SEC1_IDS = ["q12"];
   const IMPL_SEC2_IDS = ["q15", "q16"];
   const IMPL_IDS = [...IMPL_SEC1_IDS, ...IMPL_SEC2_IDS];
-  const ALL_Q_IDS = ["q0", ...CERT_IDS, ...IMPL_IDS];
+  const ALL_Q_IDS = ["q0", ...GENERAL_IDS, ...CERT_IDS, ...IMPL_IDS];
 
-  let selectedMode = null; 
+  let selectedMode = null;
   let formStartedAt = "";
+  let q11Continuado = false;
 
   // =========================
   // HELPERS
@@ -135,6 +141,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!visible && clearIfHidden) {
       clearAnswer(qid);
+
+      if (qid === "q11") {
+        resetQ11Extra(true);
+      }
     }
   }
 
@@ -150,9 +160,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getFlowIds() {
-    if (selectedMode === "CERTIFICACION") return CERT_IDS;
-    if (selectedMode === "IMPLEMENTACION") return IMPL_IDS;
+    if (selectedMode === "CERTIFICACION") {
+      return [...GENERAL_IDS, ...CERT_IDS];
+    }
+    if (selectedMode === "IMPLEMENTACION") {
+      return [...GENERAL_IDS, ...IMPL_IDS];
+    }
     return [];
+  }
+
+  function resetQ11Extra(clearText = true) {
+    q11Continuado = false;
+    q11Extra?.classList.add("hidden");
+    if (clearText && q11Detalle) {
+      q11Detalle.value = "";
+    }
+  }
+
+  function handleQ11Extra() {
+    const q11Answer = getAnswer("q11");
+
+    if (q11Answer === "SI") {
+      q11Extra?.classList.remove("hidden");
+    } else {
+      resetQ11Extra(true);
+    }
   }
 
   function getFlowState(ids) {
@@ -175,6 +207,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (answer === "NO") {
         return { finished: true, finishedByNo: true, fullYes: false, stopAt: qid };
+      }
+
+      if (qid === "q11" && answer === "SI") {
+        const detalle = safeText(q11Detalle?.value);
+        if (!detalle || !q11Continuado) {
+          return { finished: false, finishedByNo: false, fullYes: false, stopAt: qid };
+        }
       }
     }
 
@@ -221,7 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function showFinishedMessages(flowState) {
     if (flowEndMsg) {
       flowEndMsg.innerHTML = flowState.finishedByNo
-        ? '✅ Se registró una respuesta <strong>NO</strong>. El formulario se dio por finalizado. Ya puede usar <strong>ENVIAR</strong> o <strong>DESCARGAR PDF</strong>.'
+        ? '✅ Se registró una respuesta <strong>NO</strong>. El formulario se dio por finalizado. Ya puede <strong>DESCARGAR PDF</strong>.'
         : '✅ Formulario completado. Ya puede <strong>DESCARGAR PDF</strong>.';
 
       flowEndMsg.classList.remove("hidden");
@@ -258,12 +297,77 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const q0Answer = getAnswer("q0");
 
-    if (sec0Details) {
-      sec0Details.open = q0Answer !== "SI";
-    }
-
     certFlow?.classList.toggle("hidden", selectedMode !== "CERTIFICACION");
     implFlow?.classList.toggle("hidden", selectedMode !== "IMPLEMENTACION");
+
+    // =========================
+    // INFORMACIÓN GENERAL
+    // =========================
+    processSequential(GENERAL_IDS);
+
+    if (sec0Details) {
+      sec0Details.open = true;
+    }
+
+    if (q0Answer !== "SI") {
+      hideAndClearQuestions(GENERAL_IDS);
+      hideAndClearQuestions(CERT_IDS);
+      hideAndClearQuestions(IMPL_IDS);
+      resetQ11Extra(true);
+
+      sec2Wrap?.classList.add("hidden");
+      sec4Wrap?.classList.add("hidden");
+
+      if (sec2Details) sec2Details.open = false;
+      if (sec3Details) sec3Details.open = false;
+      if (sec4Details) sec4Details.open = false;
+
+      if (q0Answer === "NO") {
+        showFinishedMessages(getFlowState(getFlowIds()));
+      }
+
+      refreshSubmitState();
+      return;
+    }
+
+    const generalState = getFlowState(GENERAL_IDS);
+
+    if (!generalState.finished) {
+      hideAndClearQuestions(CERT_IDS);
+      hideAndClearQuestions(IMPL_IDS);
+      resetQ11Extra(true);
+
+      sec2Wrap?.classList.add("hidden");
+      sec4Wrap?.classList.add("hidden");
+
+      if (sec2Details) sec2Details.open = false;
+      if (sec3Details) sec3Details.open = false;
+      if (sec4Details) sec4Details.open = false;
+
+      refreshSubmitState();
+      return;
+    }
+
+    if (generalState.finishedByNo) {
+      hideAndClearQuestions(CERT_IDS);
+      hideAndClearQuestions(IMPL_IDS);
+      resetQ11Extra(true);
+
+      sec2Wrap?.classList.add("hidden");
+      sec4Wrap?.classList.add("hidden");
+
+      if (sec2Details) sec2Details.open = false;
+      if (sec3Details) sec3Details.open = false;
+      if (sec4Details) sec4Details.open = false;
+
+      showFinishedMessages(generalState);
+      refreshSubmitState();
+      return;
+    }
+
+    if (sec0Details) {
+      sec0Details.open = false;
+    }
 
     // =========================
     // CERTIFICACIÓN
@@ -276,29 +380,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
       sec2Wrap?.classList.remove("hidden");
 
-      if (q0Answer === "SI") {
-        processSequential(CERT_IDS);
+      processSequential(CERT_IDS);
+      handleQ11Extra();
 
-        if (sec0Details) sec0Details.open = false;
+      if (sec2Details) sec2Details.open = true;
+
+      const flowState = getFlowState([...GENERAL_IDS, ...CERT_IDS]);
+
+      if (flowState.fullYes) {
+        doneCertTareas?.classList.remove("hidden");
+      }
+
+      if (flowState.finished) {
+        showFinishedMessages(flowState);
         if (sec2Details) sec2Details.open = true;
-
-        const flowState = getFlowState(CERT_IDS);
-
-        if (flowState.fullYes) {
-          doneCertTareas?.classList.remove("hidden");
-        }
-
-        if (flowState.finished) {
-          showFinishedMessages(flowState);
-          if (sec2Details) sec2Details.open = true;
-        }
-      } else {
-        hideAndClearQuestions(CERT_IDS);
-        if (sec2Details) sec2Details.open = false;
-
-        if (q0Answer === "NO") {
-          showFinishedMessages(getFlowState(CERT_IDS));
-        }
       }
     }
 
@@ -307,58 +402,47 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================
     if (selectedMode === "IMPLEMENTACION") {
       hideAndClearQuestions(CERT_IDS);
+      resetQ11Extra(true);
       sec2Wrap?.classList.add("hidden");
       if (sec2Details) sec2Details.open = false;
 
-      if (q0Answer === "SI") {
-        processSequential(IMPL_IDS);
+      processSequential(IMPL_IDS);
 
-        if (sec0Details) sec0Details.open = false;
-        if (sec3Details) sec3Details.open = true;
+      if (sec3Details) sec3Details.open = true;
 
-        const q12Answer = getAnswer("q12");
+      const q12Answer = getAnswer("q12");
 
-        if (q12Answer === "SI") {
-          doneImpl?.classList.remove("hidden");
-          sec4Wrap?.classList.remove("hidden");
-          if (sec3Details) sec3Details.open = false;
-          if (sec4Details) sec4Details.open = true;
-
-          setQuestionVisibility("q15", true, false);
-
-          if (getAnswer("q15") === "SI") {
-            setQuestionVisibility("q16", true, false);
-          } else if (getAnswer("q15") !== "NO") {
-            setQuestionVisibility("q16", false, true);
-          }
-        } else if (q12Answer === "NO") {
-          sec4Wrap?.classList.add("hidden");
-          hideAndClearQuestions(IMPL_SEC2_IDS);
-        } else {
-          sec4Wrap?.classList.add("hidden");
-          hideAndClearQuestions(IMPL_SEC2_IDS);
-          if (sec3Details) sec3Details.open = true;
-          if (sec4Details) sec4Details.open = false;
-        }
-
-        const flowState = getFlowState(IMPL_IDS);
-
-        if (flowState.fullYes) {
-          donePost?.classList.remove("hidden");
-        }
-
-        if (flowState.finished) {
-          showFinishedMessages(flowState);
-        }
-      } else {
-        hideAndClearQuestions(IMPL_IDS);
-        sec4Wrap?.classList.add("hidden");
+      if (q12Answer === "SI") {
+        doneImpl?.classList.remove("hidden");
+        sec4Wrap?.classList.remove("hidden");
         if (sec3Details) sec3Details.open = false;
-        if (sec4Details) sec4Details.open = false;
+        if (sec4Details) sec4Details.open = true;
 
-        if (q0Answer === "NO") {
-          showFinishedMessages(getFlowState(IMPL_IDS));
+        setQuestionVisibility("q15", true, false);
+
+        if (getAnswer("q15") === "SI") {
+          setQuestionVisibility("q16", true, false);
+        } else if (getAnswer("q15") !== "NO") {
+          setQuestionVisibility("q16", false, true);
         }
+      } else if (q12Answer === "NO") {
+        sec4Wrap?.classList.add("hidden");
+        hideAndClearQuestions(IMPL_SEC2_IDS);
+      } else {
+        sec4Wrap?.classList.add("hidden");
+        hideAndClearQuestions(IMPL_SEC2_IDS);
+        if (sec3Details) sec3Details.open = true;
+        if (sec4Details) sec4Details.open = false;
+      }
+
+      const flowState = getFlowState([...GENERAL_IDS, ...IMPL_IDS]);
+
+      if (flowState.fullYes) {
+        donePost?.classList.remove("hidden");
+      }
+
+      if (flowState.finished) {
+        showFinishedMessages(flowState);
       }
     }
 
@@ -377,7 +461,9 @@ document.addEventListener("DOMContentLoaded", () => {
       numeroCambio: safeText(numeroCambioInput?.value),
       fechaRealizacion: formStartedAt,
       formVersion: "3",
-      source: window.location.href
+      source: window.location.href,
+      q11_detalle: safeText(q11Detalle?.value),
+      q11_continuado: q11Continuado
     };
 
     ALL_Q_IDS.forEach((qid) => {
@@ -427,6 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
     certFlow?.classList.add("hidden");
     implFlow?.classList.add("hidden");
 
+    hideAndClearQuestions(GENERAL_IDS);
     hideAndClearQuestions(CERT_IDS);
     hideAndClearQuestions(IMPL_IDS);
 
@@ -438,6 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sec3Details) sec3Details.open = false;
     if (sec4Details) sec4Details.open = false;
 
+    resetQ11Extra(true);
     resetMessages();
     resetFormTimestamp();
     setNumeroCambioVisibility();
@@ -512,6 +600,33 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =========================
+  // INPUT DETALLE Q11
+  // =========================
+  q11Detalle?.addEventListener("input", () => {
+    q11Continuado = false;
+    refreshSubmitState();
+  });
+
+  // =========================
+  // BOTÓN CONTINUAR Q11
+  // =========================
+  btnQ11Continuar?.addEventListener("click", () => {
+    const detalle = safeText(q11Detalle?.value);
+
+    if (getAnswer("q11") !== "SI") return;
+
+    if (!detalle) {
+      alert("Debe ingresar el detalle del proceso automático antes de continuar.");
+      q11Detalle?.focus();
+      return;
+    }
+
+    q11Continuado = true;
+    ensureFormTimestamp();
+    syncUI();
+  });
+
+  // =========================
   // LÓGICA DE RADIOS
   // =========================
   form.addEventListener("change", (e) => {
@@ -532,6 +647,16 @@ document.addEventListener("DOMContentLoaded", () => {
         clearAnswer("q0");
         refreshSubmitState();
         return;
+      }
+    }
+
+    if (target.name === "q11_answer") {
+      q11Continuado = false;
+
+      if (target.value === "SI") {
+        q11Extra?.classList.remove("hidden");
+      } else {
+        resetQ11Extra(true);
       }
     }
 
@@ -601,6 +726,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       rows.push([getItemText(qid), answer]);
 
+      if (qid === "q11" && answer === "SI") {
+        const detalle = safeText(q11Detalle?.value);
+        if (detalle) {
+          rows.push(["Detalle del proceso automático", detalle]);
+        }
+      }
+
       if (answer === "NO") break;
     }
 
@@ -614,7 +746,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const numeroCambio = safeText(numeroCambioInput?.value);
     const fechaRealizacion = formStartedAt || formatEcuadorDateTime(new Date());
 
-    const infoGeneral = [[getItemText("q0"), getAnswer("q0") || ""]];
+    const infoGeneral = [
+      [getItemText("q0"), getAnswer("q0") || ""],
+      ...rowsUntilStop(GENERAL_IDS)
+    ];
+
     const certTareas = rowsUntilStop(CERT_IDS);
     const implementacion = rowsUntilStop(IMPL_SEC1_IDS);
     const postImplementacion = rowsUntilStop(IMPL_SEC2_IDS);
@@ -629,15 +765,6 @@ document.addEventListener("DOMContentLoaded", () => {
       postImplementacion,
       selectedMode
     };
-  }
-
-  function ensurePdfSpace(doc, currentY, neededHeight = 60) {
-    const pageH = doc.internal.pageSize.getHeight();
-    if (currentY + neededHeight > pageH - 30) {
-      doc.addPage();
-      return 30;
-    }
-    return currentY;
   }
 
   function generatePdf() {

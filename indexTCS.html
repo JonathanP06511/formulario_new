@@ -581,11 +581,6 @@
                                     </div>
                                     <input class="q-check yn-done persCheck" type="checkbox" style="display:none;">
                                 </div>
-
-                                <div id="donePers" class="mensaje-success hidden">
-                                    ✅ Formulario completado. Haz click en <strong>ENVIAR</strong> y <strong>DESCARGAR
-                                        PDF</strong> para finalizar
-                                </div>
                             </div>
                         </details>
                     </div>
@@ -621,7 +616,8 @@
 
                             <div class="q-block q-yn hidden">
                                 <div class="q-text">2. Levantar la línea base previa ejecución del control de cambios
-                                    (Considerar además monitoreo Dynatrace sobre CIs a afectarse).</div>
+                                    <strong>(Considerar además monitoreo Dynatrace sobre CIs a afectarse).</strong>
+                                </div>
                                 <div class="yn-group">
                                     <label class="yn-option yn-option--si"><input class="yn-radio" type="radio"
                                             name="impl2" value="SI"><span>SI</span></label>
@@ -644,10 +640,13 @@
                             </div>
 
                             <div class="q-block q-yn hidden">
-                                <div class="q-text">4. Asegurar que se ejecuten ÚNICAMENTE las tareas del control de
+                                <div class="q-text">4. Asegurar que se ejecuten <strong>ÚNICAMENTE</strong> las tareas
+                                    del control de
                                     cambios. En caso de existir necesidades/tareas adicionales no consideradas,
                                     gestionar la aprobación de SMO BP - Control de cambios: Cristina Nejer
-                                    (cnejer@pichincha.com) o Mario Zegarra (mszegarr@pichincha.com).</div>
+                                    <strong>(cnejer@pichincha.com)</strong> o Mario Zegarra
+                                    <strong>(mszegarr@pichincha.com).</strong>
+                                </div>
                                 <div class="yn-group">
                                     <label class="yn-option yn-option--si"><input class="yn-radio" type="radio"
                                             name="impl4" value="SI"><span>SI</span></label>
@@ -684,7 +683,8 @@
 
                             <div class="tcs-accordion__content accordion__content">
                                 <div class="mensaje tcs-warning">
-                                    ⚠ Complete todos los ítems.
+                                    ⚠ Complete todos los ítems. El formulario se considerará finalizado únicamente
+                                    cuando todos estén respondidos.
                                 </div>
 
                                 <div class="q-block q-yn hidden" id="post1">
@@ -704,10 +704,12 @@
                                         style="display:none;">
                                 </div>
 
+
+
                                 <div class="q-block hidden" id="post2">
                                     <input class="q-check" type="checkbox" id="post2_done" style="display:none">
 
-                                    <div style="font-weight:600; color:#0B1B2B; margin-bottom:10px;">
+                                    <div style="font-weight:400; color:#0B1B2B; margin-bottom:10px;">
                                         2. ¿Se realizaron pruebas funcionales como parte del plan de pruebas post
                                         implementación?
                                     </div>
@@ -723,13 +725,34 @@
                                             <span>NO</span>
                                         </label>
                                     </div>
+
+                                    <!-- Aparece solo cuando se responde NO -->
+                                    <div id="post2_extra" class="hidden" style="margin-top:14px;">
+                                        <label for="post2_comment"
+                                            style="display:block; margin-bottom:8px; color:#0B1B2B;">
+                                            Escriba el motivo:
+                                        </label>
+
+                                        <textarea id="post2_comment" rows="4" placeholder="Detalle aquí el motivo..."
+                                            style="width:100%; padding:10px; border:1px solid #D0D7DE; border-radius:8px; resize:vertical; box-sizing:border-box;"></textarea>
+
+                                        <div style="margin-top:12px;">
+                                            <button type="button" id="btnPost2Finish"
+                                                style="padding:10px 16px; background:#0B1B2B; color:#fff; border:none; border-radius:8px; cursor:pointer;">
+                                                Finalizar formulario
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
+
+
+
 
                                 <div class="q-block hidden" id="post3">
                                     <input class="q-check" type="checkbox" id="post3_done" style="display:none">
 
                                     <div id="post3_si" class="hidden" style="margin-top:10px;">
-                                        <label style="display:block; font-weight:600; margin-bottom:8px;">
+                                        <label style="display:block; font-weight:400; margin-bottom:8px;">
                                             3. Detallar de forma general las pruebas funcionales realizadas (Qué equipo
                                             / tipo de pruebas).
                                         </label>
